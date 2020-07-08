@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>大数据分析</title>
+    <script src="{{ url_for('static', filename='jquery-3.5.1.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='echarts.js') }}"></script>
+    <script src="{{ url_for('static', filename='echarts-wordcloud.js') }}"></script>
+    <script src="{{ url_for('static', filename='china.js') }}"></script>
+    <script src="{{ url_for('static', filename='start.js') }}"></script>
+    <style>
+        *{margin: 0;padding: 0;}
+        html,body{
+            width: 100%;
+            height: 100%;
+        }
+
+        body{
+            background-image: url("{{ url_for('static', filename='img/bg_body.jpg') }}");
+            background-repeat: no-repeat;
+            background-size:100% 100%;
+            background-attachment: fixed;
+        }
+        .main-title{
+            background: url("{{ url_for('static', filename='img/bg_head.png') }}") no-repeat center center;
+            width: 100%;
+        }
+        #times{
+            position: absolute;
+            height: 60px;
+            right: 20px;
+            line-height: 60px;
+            color: white;
+            font-size: large;
+        }
+        h1{
+            text-align: center;
+            color: #cccccc;
+            {#border: 1px solid rgba(25,186,139,.17);#}
+            height: 60px;
+            line-height: 60px;
+            margin-bottom: 30px;
+        }
+        .box{
+            position: relative;
+            display: flex;
+            justify-content: space-around;
+            flex-direction: column;
+            padding: 0 10px;
+        }
+        .up{
+            position: relative;
+            display: flex;
+            justify-content: space-around;
+            padding: 0 10px;
+        }
+        .bottom{
+            {#position: absolute;#}
+        }
+        .bottom-in-box{
+            display: flex;
+            justify-content: space-around;
+            {#flex-direction: column;#}
+        }
+        .left, .right{
+            display: flex;
+            flex-direction: column;
+            width: 25%;
+            height: 520px;
+            align-items: center;
+        }
+        .middle{
+            height: 520px;
+            flex: 1;
+            justify-content: space-around;
+        }
+        .first-box, .third-box{
+            width: 400px;
+        }
+        .border-top,.border-foot{
+            width: 100%;
+            position: relative;
+        }
+        .border-top{
+            border: 1px solid rgba(25,186,139,.17);
+            background: rgba(255,255,255,.04);
+            margin-bottom: 20px;
+            z-index: 1;
+         }
+        .border-top:before,.border-top:after,.border-foot:before,.border-foot:after{
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            content: '';
+        }
+        .border-top:before{
+            border-top: 3px solid #02a6b5;
+            left: -2px;
+            top: -2px;
+            border-left: 3px solid #02a6b5;
+        }
+        .border-top:after{
+            border-top: 3px solid #02a6b5;
+            right: -2px;
+            top: -2px;
+            border-right: 3px solid #02a6b5;
+        }
+        .border-foot:before{
+            left: -2px;
+            bottom: -2px;
+            border-left: 3px solid #02a6b5;
+            border-bottom: 3px solid #02a6b5;
+        }
+        .border-foot:after{
+            right: -2px;
+            bottom: -2px;
+            border-right: 3px solid #02a6b5;
+            border-bottom: 3px solid #02a6b5;
+        }
+        #total_data{
+            width: 100%;
+        }
+        #total_data>ul{
+            color: #fff;
+            list-style: none;
+            font-size: 1.1em;
+        }
+        #total_data>ul>li{
+            height: 60px;
+            width: 80%;
+            margin-left: 25px;
+            padding-left: 40px;
+        }
+        #total_data>ul>li:nth-child(1){
+            border-bottom: 1px solid;
+            border-image: linear-gradient(to right, rgba(25,186,139, 0) 0%, rgba(25,186,139,.3) 20%, rgba(25,186,139,.3) 80%, rgba(25,186,139, 0) 100%) 30 30;
+        }
+        #total_data>ul>li>span{
+            color: #ffdd59;
+            font-size: 2em;
+        }
+        .title{
+            display: block;
+            margin: 10px 10px;
+            padding: 5px 20px;
+            text-align: center;
+            font-size: 1.2em;
+            color: #fff;
+            border-bottom: 1px solid;
+            border-image: linear-gradient(to right, rgba(25,186,139, 0) 0%, rgba(25,186,139,.3) 20%, rgba(25,186,139,.3) 80%, rgba(25,186,139, 0) 100%) 30 30;
+        }
+        #map{
+            height:520px;
+        }
+        #birthday{
+            height:240px;
+            width:900px;
+        }
+        #gender{
+            height:300px;
+            width: 100%;
+        }
+        #cloud_char {
+            height: 450px;
+            width: 100%;
+        }
+        #foreign{
+            height:240px;
+            width:100%;
+        }
+        #subdivide>ul{
+            list-style: none;
+            color: #fff;
+            font-size: 1.1em;
+        }
+        #subdivide>ul>li{
+            height: 35px;
+            line-height: 35px;
+            width: 70%;
+            margin: 0 auto;
+            padding: 0 20px;
+            border-bottom: 1px solid;
+            border-image: linear-gradient(to right, rgba(25,186,139, 0) 0%, rgba(25,186,139,.3) 20%, rgba(25,186,139,.3) 80%, rgba(25,186,139, 0) 100%) 30 30;
+            display: flex;
+            justify-content: space-between;
+        }
+        #subdivide>ul>li>span{
+            display: inline-block;
+            {#margin-left: 25px;#}
+        }
+        #subdivide_birth{
+            height: 130px;
+            width: 100%;
+        }
+        #canvas {
+            position: absolute;
+            left: 0;
+            top: 0;
+            {#background-color: #000;#}
+            z-index: -1;
+         }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+    <span id="times"></span>
+    <div class="main-title">
+        <h1>抖音大数据</h1>
+    </div>
+    <div class="box">
+        <div class="up">
+            <div class="left">
+                <div class="border-top">
+                    <div id="total_data">
+                        <ul>
+                            <li>当前总用户信息数：&nbsp;<span class="total-num" id="user_count">获取中</span></li>
+                            <li>当前视频信息数：&nbsp;&nbsp;&nbsp;&nbsp;<span class="total-num" id="video_count">获取中</span></li>
+                        </ul>
+                    </div>
+                    <div class="border-foot"></div>
+                </div>
+                <div class="border-top">
+                    <span class="title">性别分布</span>
+                    <div id="gender"></div>
+                    <div class="border-foot"></div>
+                </div>
+            </div>
+            <div class="middle">
+                <div id="map"></div>
+            </div>
+            <div class="right">
+                <div class="border-top">
+                    <span class="title">评论词频率分析</span>
+                    <span id="tips" style="color: white;margin-left: 20px;float: left">加载中...</span>
+                    <div id="cloud_char"></div>
+                     <div class="border-foot"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom">
+            <div class="border-top">
+                <div class="bottom-in-box">
+                    <div class="first-box">
+                        <span class="title">外国人数分析</span>
+                        <div id="foreign"></div>
+                    </div>
+                    <div class="sec-box">
+                        <span class="title">出生年份分布</span>
+                        <div id="birthday"></div>
+                    </div>
+                    <div class="third-box">
+                        <span class="title" id="province">量化细分</span>
+                        <div id="subdivide">
+                            <ul>
+                                <li>男：获取中<span></span></li>
+                                <li>女：获取中<span></span></li>
+                                <li>无：获取中<span></span></li>
+                            </ul>
+                            <div id="subdivide_birth"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-foot"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+
+
+    {#男女比例饼图#}
+    let gender = echarts.init(document.getElementById('gender'));
+    gender.setOption({
+        tooltip: {
+            trigger: 'item',
+            formatter: '{a} <br/>{b} : {c} ({d}%)'
+        },
+        color : [ '#ff5200', '#ffd31d', '#00a1ab'],
+        series : [
+            {
+                name: '男女比例',
+                type: 'pie',
+                radius: '80%',
+                label:{
+                  show: true,
+                  formatter: '{b} :({d}%)'
+               },
+
+            },
+        ],
+
+    });
+
+
+    {#中国地图人数分布#}
+    let map_chart = echarts.init(document.getElementById('map'));
+    map_chart.setOption({
+        {#title:{#}
+        {#    text:'用户分布',#}
+        {#    textStyle:{#}
+        {#        color: '#fff',#}
+        {#        fontSize:20,#}
+        {#        align:'center',#}
+        {#        verticalAlign: 'center'#}
+        {#    },#}
+        {#    subtextStyle: {#}
+        {##}
+        {#    }#}
+        {# },#}
+        visualMap: {
+            show : true,
+            splitList: [
+                {start: 3000, end:10000},{start: 1500, end: 3000},
+                {start: 1000, end: 1500},{start: 500, end: 1000},
+                {start: 200, end: 500},{start: 0, end: 200},
+            ],
+            {#color: ['#5475f5', '#9feaa5', '#85daef','#74e2ca', '#e6ac53', '#9fb5ea'],#}
+            {#color: ['rgba(74,20,140,1)', 'rgba(74,20,140,0.9)', 'rgba(74,20,140,0.7)','rgba(74,20,140,0.5)', 'rgba(74,20,140,0.3)', 'rgba(74,20,140,0.2)'],#}
+            color: ['rgba(0,145,234,1)', 'rgba(0,145,234,0.9)', 'rgba(0,145,234,0.7)','rgba(0,145,234,0.5)', 'rgba(0,145,234,0.3)', 'rgba(0,145,234,0.2)'],
+            bottom:10,
+            left:20,
+            backgroundColor:'rgba(255,255,255,.04)',
+            textStyle:{
+                color: '#fff'
+            }
+        },
+        name: '抖音用户分布',
+        tooltip: {
+            trigger: 'item',
+            formatter: '{b}<br/>人数：{c} 人'
+        },
+        series: [{
+            type: 'map',
+            map: 'china',
+            roam: true,
+            zoom: 1.2,
+            title: {
+                text: '抖音用户分布',
+                subtext: '',
+                x:'center'
+            },
+            data: [],
+            itemStyle:{
+                type: 'linear',
+                normal: {
+                    areaColor: 'rgba(60, 64, 198,0.8)',
+                    borderColor: 'rgba(26,35,126,0.5)'
+                },
+                emphasis: {
+                    areaColor: '#293fff'
+                },
+            },
+            emphasis: {
+                label: {
+                    show: true,
+                    color: '#ffdd59'
+                }
+            },
+            label: {
+                show: true,
+                color: '#fff',
+            }
+
+        },
+        {#{#}
+        {#    name: '抖音人数',#}
+        {#    type: 'scatter',#}
+        {#    coordinateSystem: 'bmap',#}
+        {#    data: [{#}
+        {#        name: '广东',#}
+        {#        value: 50#}
+        {#    }, {#}
+        {#        name: '北京',#}
+        {#        value: 50#}
+        {#    }#}
+        {#    ],#}
+        {#    encode: {#}
+        {#        value: 2#}
+        {#    },#}
+        {#    symbolSize: function (val) {#}
+        {#        return val[2] / 10;#}
+        {#    },#}
+        {#    label: {#}
+        {#        formatter: '{b}',#}
+        {#        position: 'right'#}
+        {#    },#}
+        {#    itemStyle: {#}
+        {#        color: '#ddb926'#}
+        {#    },#}
+        {#    emphasis: {#}
+        {#        label: {#}
+        {#            show: true#}
+        {#        }#}
+        {#    }#}
+        {# }#}
+        ]
+    });
+
+
+    {#词云#}
+    let maskImage = new Image();
+    maskImage.src = "{{ url_for('static', filename='img/douyin_big-1.png') }}"
+    let wordCloud_chart = echarts.init(document.getElementById('cloud_char'));
+    wordCloud_chart.setOption({
+        series: [{
+            type: 'wordCloud',
+            shape: 'circle',
+            maskImage: maskImage,
+            gridSize: 4,
+            drawOutOfBound: false,
+            left: '5',
+            top: '5',
+            right: '5',
+            bottom: '5',
+            width:'100%',
+            height:'100%',
+            rotationStep: '10',
+            sizeRange: [8, 80],
+            textStyle: {
+                normal: {
+                    fontFamily: 'sans-serif',
+                    fontWeight: 'bold',
+                    // Color can be a callback function or a color string
+                    color: function () {
+                        // Random color
+                        return 'rgb(' + [
+                            Math.round(Math.random() * 160),
+                            Math.round(Math.random() * 160),
+                            Math.round(Math.random() * 160)
+                        ].join(',') + ')';
+                    }
+                },
+                emphasis: {
+                    shadowBlur: 10,
+                    shadowColor: '#333'
+                }
+            },
+
+            data: []
+        }]
+    });
+
+    {#出生年份分析#}
+    let birthday = echarts.init(document.getElementById('birthday'));
+    birthday.setOption({
+        grid:{
+              x:50,
+              y:20,
+              x2:20,
+              y2:30
+         },
+        xAxis: {
+            type: 'category',
+            data: [],
+
+            axisLine:{
+               lineStyle:{
+                   color:'#fff'
+               }
+            },
+            axisTick: {
+                alignWithLabel: true
+             },
+        },
+        label: {
+            {#pointerout: 'top',#}
+            show: true,
+            color: '#fff',
+            formatter:"{c}",
+        },
+        yAxis: {
+            type: 'value',
+            axisLine:{
+               lineStyle:{
+                   color:'#fff'
+               }
+            },
+        },
+        tooltip: {
+            show: true,
+            formatter:"{a} <br/>年份：{b} <br/>人数：{c}人"
+        },
+        series: [{
+            name: '出生人数分布',
+            data: [],
+            type: 'bar'
+        }]
+    });
+
+    {#各国人数分析#}
+    let foreign = echarts.init(document.getElementById('foreign'));
+    foreign.setOption({
+        tooltip: {
+            trigger: 'axis',
+            formatter: '国家：{b} <br/>人数：{c}人'
+        },
+        grid:{
+              x:80,
+              y:20,
+              x2:20,
+              y2:30
+         },
+        label: {
+            pointerout: 'top',
+            show: true,
+            color: '#fff',
+            formatter:"{c}人",
+        },
+        xAxis: {
+            type: 'value',
+            boundaryGap: [0, 0.01],
+            axisLine:{
+               lineStyle:{
+                   color:'#fff'
+               }
+            },
+        },
+        yAxis: {
+            type: 'category',
+            data: [],
+            axisLine:{
+               lineStyle:{
+                   color:'#fff'
+               }
+            },
+        },
+        series: [
+            {
+                type: 'bar',
+                data: [],
+                itemStyle:{
+                    color: 'rgb(78,52,46)'
+                }
+            },
+        ]
+    });
+
+    {#分省年龄分析#}
+    let subdivide_birth = echarts.init(document.getElementById('subdivide_birth'));
+    subdivide_birth.setOption({
+        tooltip: {
+            trigger: 'axis',
+            formatter: '年龄：{b} <br/>人数：{c}人'
+        },
+        grid:{
+              x:80,
+              y:20,
+              x2:20,
+              y2:30
+         },
+        label: {
+            pointerout: 'top',
+            show: true,
+            color: '#fff',
+            formatter:"{c}人",
+        },
+        xAxis: {
+            type: 'value',
+            boundaryGap: [0, 0.01],
+            axisLine:{
+               lineStyle:{
+                   color:'#fff'
+               }
+            },
+        },
+        yAxis: {
+            type: 'category',
+            data: [],
+            axisLine:{
+               lineStyle:{
+                   color:'#fff'
+               }
+            },
+        },
+        series: [
+            {
+                type: 'bar',
+                data: [],
+                itemStyle:{
+                    color: 'rgb(255,179,0)'
+                }
+            },
+
+        ]
+    });
+
+    let pre_select = '广东';
+
+    let getInfo = ()=>{
+        {#动态更新数据#}
+        //获取数量
+        $.ajax({
+            type : "get",
+            async : true,            //异步请求（同步请求将会锁住浏览器，用户其他操作必须等待请求完成才可以执行）
+            url : "getCount",
+            dataType : "json",
+            success : function(result) {
+                if (result) {
+                    $("#user_count").html(result['cuser']);
+                    $("#video_count").html(result['cvideo']);
+                }
+            },
+
+        });
+
+        //获取男女比例
+        $.ajax({
+            type : "get",
+            async : true,
+            url : "gender",
+            dataType : "json",
+            success : function(result) {
+                if (result) {
+                    gender.hideLoading();    //隐藏加载动画
+                    gender.setOption({
+                        series: {
+                            data:[
+                                {value:result['noset'], name:'未设置'},
+                                {value:result['male'], name:'男'},
+                                {value:result['female'], name:'女'},
+                            ],
+                        }
+                    });
+                }
+            },
+            error : function(errorMsg) {
+                gender.hideLoading();
+            }
+        });
+
+
+        //获取中国地图人数分布数据
+        $.ajax({
+            type : "get",
+            async : true,
+            url : "map",
+            dataType : "json",
+            success : function(result) {
+                if (result) {
+                    map_chart.hideLoading();    //隐藏加载动画
+                    map_chart.setOption({
+                        series: {
+                            data:result,
+                        }
+                    });
+                }
+            },
+            error : function(errorMsg) {
+                map_chart.hideLoading();
+            }
+        });
+
+
+        //获取出生日期数据
+        $.ajax({
+            type : "get",
+            async : true,
+            url : "birthday",
+            dataType : "json",
+            success : function(result) {
+                if (result) {
+                    birthday.hideLoading();    //隐藏加载动画
+                    birthday.setOption({
+                        xAxis: {
+                            data: result['categories']
+                         },
+                        series: {
+                            data: result['data']
+                        }
+                    });
+                }
+            },
+            error : function(errorMsg) {
+                birthday.hideLoading();
+            }
+        });
+
+
+        //各国人数分析
+        $.ajax({
+            type : "get",
+            async : true,
+            url : "country",
+            dataType : "json",
+            success : function(result) {
+                if (result) {
+                    foreign.hideLoading();    //隐藏加载动画
+                    foreign.setOption({
+                        yAxis: {
+                            data: result['categories']
+                        },
+                        series: {
+                            data: result['data']
+                        }
+                    });
+                }
+            },
+            error : function(errorMsg) {
+                foreign.hideLoading();
+            }
+        });
+
+        get_province_analysis(pre_select);
+    };
+
+    function get_province_analysis(province='广东'){
+        $.ajax({
+            type : "get",
+            async : true,
+            url : "analysis",
+            dataType : "json",
+            data: {province: province},
+            success : function(result) {
+                if (result) {
+                    //标题
+                    $('#province').html(result['province']);
+                    //出生日期分析图
+                    subdivide_birth.hideLoading();
+                    subdivide_birth.setOption({
+                        yAxis: {
+                            data: result['birthday']['categories']
+                        },
+                        series: {
+                            data: result['birthday']['data']
+                        }
+                    });
+                    //男女比例
+                    let total_counts = result["gender"]["male"] + result["gender"]["female"] + result["gender"]["no_set"]
+                    $("#subdivide > ul > li:nth-child(1)").html("男："+result["gender"]["male"].toString()+"<span>"+(result["gender"]["male"]/total_counts*100).toFixed(2)+"%</span>");
+                    $("#subdivide > ul > li:nth-child(2)").html("女："+result["gender"]["female"].toString()+"<span>"+(result["gender"]["female"]/total_counts*100).toFixed(2)+"%</span>");
+                    $("#subdivide > ul > li:nth-child(3)").html("无："+result["gender"]["no_set"].toString()+"<span>"+(result["gender"]["no_set"]/total_counts*100).toFixed(2)+"%</span>");
+                }
+            },
+            error : function(errorMsg) {
+                foreign.hideLoading();
+            }
+        });
+    }
+
+    //词云加载慢，将获取词云独立开，无需实时更新
+    let get_word_cloud = ()=>{
+        $.ajax({
+            type : "get",
+            async : true,
+            url : "wordCloud",
+            dataType : "json",
+            success : function(result) {
+                {#wordCloud_chart.hideLoading();    //隐藏加载动画#}
+                $('#tips').html('');
+                wordCloud_chart.setOption({
+                    series: {
+                        data:result
+                    }
+                });
+            },
+            error : function(errorMsg) {
+                wordCloud_chart.hideLoading();
+            }
+        });
+    };
+
+     function getDate(){
+         let date = new Date();//获取当前时间
+         $('#times').html(date.toLocaleString())
+     }
+    setInterval(getDate,1000);
+    {#setInterval(getInfo, 1000);#}
+    {#setInterval(get_word_cloud, 10000);#}
+    getInfo();
+    get_word_cloud();
+
+    //地图点击事件，进行量化显示
+    map_chart.on('click', function (param) {
+        pre_select = param.name;
+        get_province_analysis(param.name)
+
+    });
+
+    </script>
+</body>
+</html>
